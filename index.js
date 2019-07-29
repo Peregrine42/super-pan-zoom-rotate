@@ -1,141 +1,7 @@
-console.log("basic transform");
-
-x = 50;
-y = 25;
-
-console.log("point global coords");
-console.log(x, y);
-
-cameraX = 25;
-cameraY = 0;
-cameraMatrix = TransformationMatrix.translate(cameraX, cameraY);
-console.log("camera global coords");
-console.log(cameraX, cameraY);
-
-console.log("point screen coords");
-console.log("expected", { x: 75, y: 25 });
-
-point = TransformationMatrix.applyToPoint(cameraMatrix, { x: x, y: y });
-
-console.log("actual  ", point);
-
-console.log("----------------");
-console.log("basic scale");
-
-x = 50;
-y = 25;
-cameraX = 0;
-cameraY = 0;
-cameraScale = 2;
-
-cameraMatrix = TransformationMatrix.scale(cameraScale);
-
-console.log("point global coords");
-console.log(x, y);
-console.log("camera global coords");
-console.log(cameraX, cameraY);
-
-console.log("point screen coords");
-console.log("expected", { x: 100, y: 50 });
-point = TransformationMatrix.applyToPoint(cameraMatrix, { x: x, y: y });
-
-console.log("actual  ", point);
-console.log("----------------");
-
-console.log("basic rotate");
-
-x = 50;
-y = 25;
-
-cameraX = 0;
-cameraY = 0;
-cameraAngle = -90; // note the negative angle
-
-cameraMatrix = TransformationMatrix.rotateDEG(cameraAngle);
-
-cameraMatrix = TransformationMatrix.smoothMatrix(cameraMatrix);
-
-console.log("point global coords");
-console.log(x, y);
-console.log("camera global coords");
-console.log(cameraX, cameraY);
-
-console.log("point screen coords");
-console.log("expected", { x: 25, y: -50 });
-point = TransformationMatrix.applyToPoint(cameraMatrix, { x: x, y: y });
-
-console.log("actual  ", point);
-console.log("----------------");
-
-console.log("screen offset rotate");
-
-x = 50;
-y = 25;
-
-cameraX = 0;
-cameraY = 0;
-cameraAngle = -180;
-cameraAngleOffsetX = 100;
-cameraAngleOffsetY = 0;
-
-cameraMatrix = TransformationMatrix.rotateDEG(
-  cameraAngle,
-  cameraAngleOffsetX,
-  cameraAngleOffsetY
-);
-
-cameraMatrix = TransformationMatrix.smoothMatrix(cameraMatrix);
-
-console.log("point global coords");
-console.log(x, y);
-console.log("camera global coords");
-console.log(cameraX, cameraY);
-
-console.log("point screen coords");
-console.log("expected", { x: 150, y: -25 });
-point = TransformationMatrix.applyToPoint(cameraMatrix, { x: x, y: y });
-
-console.log("actual  ", point);
-console.log("----------------");
-
-console.log("move then rotate");
-
-screenCenterX = 250;
-screenCenterY = 250;
-x = 50;
-y = 25;
-
-cameraX = 0;
-cameraY = 50;
-cameraAngle = -90;
-
-cameraMatrix = TransformationMatrix.compose(
-  TransformationMatrix.inverse(
-    TransformationMatrix.translate(cameraX, -cameraY)
-  ),
-  TransformationMatrix.rotateDEG(
-    cameraAngle,
-    cameraAngleOffsetX + cameraX,
-    -(cameraAngleOffsetY + cameraY)
-  ),
-  TransformationMatrix.translate(cameraX, -cameraY)
-);
-
-cameraMatrix = TransformationMatrix.smoothMatrix(cameraMatrix);
-
-console.log("point global coords");
-console.log(x, y);
-console.log("camera global coords");
-console.log(cameraX, cameraY);
-
-console.log("point screen coords");
-console.log("expected", { x: 25, y: -50 });
-point = TransformationMatrix.applyToPoint(cameraMatrix, { x: x, y: y });
-
-console.log("actual  ", point);
-console.log("----------------");
-
 window.addEventListener("load", function() {
+  screenCenterX = 250;
+  screenCenterY = 250;
+
   svg = document.getElementById("test");
   xAxisSVG = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
@@ -161,27 +27,66 @@ window.addEventListener("load", function() {
 
   svg.appendChild(yAxisSVG);
 
-  cameraMarker = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  list = {
+    x: 50,
+    y: 10,
+    svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
+    child: {
+      x: 100,
+      y: 120,
+      svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
+      child: {
+        x: 60,
+        y: 30,
+        child: null,
+        svg: document.createElementNS("http://www.w3.org/2000/svg", "line")
+      }
+    }
+  };
 
-  cameraMarker.setAttribute("x1", cameraX + screenCenterX);
-  cameraMarker.setAttribute("y1", cameraY + screenCenterY);
-  cameraMarker.setAttribute("x2", cameraX + screenCenterX + 1);
-  cameraMarker.setAttribute("y2", cameraY + screenCenterY);
-  cameraMarker.setAttribute("stroke-width", "2px");
-  cameraMarker.setAttribute("stroke", "blue");
-  cameraMarker.setAttribute("marker-end", "url(#arrow)");
+  svg.appendChild(list.svg);
+  svg.appendChild(list.child.svg);
+  svg.appendChild(list.child.child.svg);
 
-  svg.appendChild(cameraMarker);
+  selected = list
 
-  pointMarker = document.createElementNS(
-    "http://www.w3.org/2000/svg",
-    "circle"
-  );
+  function draw(node, originX, originY) {
+    if (node == null) return;
 
-  pointMarker.setAttribute("cx", x + screenCenterX);
-  pointMarker.setAttribute("cy", y + screenCenterY);
-  pointMarker.setAttribute("r", 5);
-  pointMarker.setAttribute("fill", "red");
+    nodeSVG = node.svg;
+    nodeSVG.setAttribute("x1", originX);
+    nodeSVG.setAttribute("y1", originY);
+    nodeSVG.setAttribute("x2", originX + node.x);
+    nodeSVG.setAttribute("y2", originY + node.y);
+    nodeSVG.setAttribute("stroke-width", "1px");
+    nodeSVG.setAttribute("stroke", node === selected ? "orange" : "grey");
+    nodeSVG.setAttribute("marker-end", "url(#dot)");
 
-  svg.appendChild(pointMarker);
+    draw(node.child, originX + node.x, originY + node.y);
+  }
+
+  draw(list, screenCenterX, screenCenterY);
+
+  window.addEventListener("keyup", function(event) {
+    if (event.key === "n") {
+      if (selected) {
+        selected = selected.child
+      } else {
+        selected = list
+      }
+      draw(list, screenCenterX, screenCenterY)
+    } else if (event.key === "ArrowLeft") {
+      selected.x -= 5
+      draw(list, screenCenterX, screenCenterY)
+    } else if (event.key === "ArrowRight") {
+      selected.x += 5
+      draw(list, screenCenterX, screenCenterY)
+    } else if (event.key === "ArrowUp") {
+      selected.y += 5
+      draw(list, screenCenterX, screenCenterY)
+    } else if (event.key === "ArrowDown") {
+      selected.y -= 5
+      draw(list, screenCenterX, screenCenterY)
+    }
+  })
 });
