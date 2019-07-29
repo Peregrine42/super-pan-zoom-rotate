@@ -1,6 +1,7 @@
 <html>
   <head>
-    <script src="/index.js"></script>
+    <script src="lib/transformation-matrix-2.0.5.js"></script>
+    <script src="index.js"></script>
     <style>
       #container {
         display: flex;
@@ -12,7 +13,19 @@
   </head>
   <body>
     <div id="container">
-      <svg id="test1" width="500" height="500"></svg>
+      <svg id="test" width="500" height="500">
+        <marker
+          id="arrow"
+          viewBox="0 0 10 10"
+          refX="5"
+          refY="5"
+          markerWidth="10"
+          markerHeight="10"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" />
+        </marker>
+      </svg>
     </div>
   </body>
 </html>
