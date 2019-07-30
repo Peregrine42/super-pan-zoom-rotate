@@ -76,8 +76,8 @@ window.addEventListener("load", function() {
     x: 0, // camera coordinates (these stay at 0)
     y: 0,
     angle: 0,
-    angleCenterX: 0,
-    angleCenterY: 0,
+    angleCenterX: 0, // touch devices need to pivot
+    angleCenterY: 0, // around a non-central origin
     scale: 1,
     svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
     cameraSVG: document.createElementNS("http://www.w3.org/2000/svg", "line"),
@@ -114,8 +114,8 @@ window.addEventListener("load", function() {
   svg.appendChild(origin.svg);
   svg.appendChild(point.svg);
 
-  // cameraSVG.appendChild(camera.cameraSVG);
-  // cameraSVG.appendChild(origin.cameraSVG);
+  cameraSVG.appendChild(camera.cameraSVG);
+  cameraSVG.appendChild(origin.cameraSVG);
   cameraSVG.appendChild(point.cameraSVG);
 
   function draw(node, originMatrix, attribute) {
@@ -136,12 +136,12 @@ window.addEventListener("load", function() {
     newMatrix = TransformationMatrix.compose(
       originMatrix,
       TransformationMatrix.translate(node.x, node.y),
-      TransformationMatrix.scale(node.scale),
       TransformationMatrix.rotateDEG(
         node.angle,
         node.angleCenterX,
         node.angleCenterY
-      )
+      ),
+      TransformationMatrix.scale(node.scale)
     );
     draw(node.child, newMatrix, attribute);
   }
