@@ -1,14 +1,17 @@
 window.addEventListener("load", function() {
-  screenCenterX = 250;
-  screenCenterY = 250;
+  screenMatrix = TransformationMatrix.translate(250, 250);
+  screenCenter = TransformationMatrix.applyToPoint(screenMatrix, {
+    x: 0,
+    y: 0
+  });
 
   svg = document.getElementById("test");
   xAxisSVG = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
-  xAxisSVG.setAttribute("x1", screenCenterX);
-  xAxisSVG.setAttribute("y1", screenCenterY);
-  xAxisSVG.setAttribute("x2", screenCenterX + 100);
-  xAxisSVG.setAttribute("y2", screenCenterY);
+  xAxisSVG.setAttribute("x1", screenCenter.x);
+  xAxisSVG.setAttribute("y1", screenCenter.y);
+  xAxisSVG.setAttribute("x2", screenCenter.x + 100);
+  xAxisSVG.setAttribute("y2", screenCenter.y);
   xAxisSVG.setAttribute("stroke-width", "1px");
   xAxisSVG.setAttribute("stroke", "black");
   xAxisSVG.setAttribute("marker-end", "url(#arrow)");
@@ -17,10 +20,10 @@ window.addEventListener("load", function() {
 
   yAxisSVG = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
-  yAxisSVG.setAttribute("x1", screenCenterX);
-  yAxisSVG.setAttribute("y1", screenCenterY);
-  yAxisSVG.setAttribute("x2", screenCenterX);
-  yAxisSVG.setAttribute("y2", screenCenterY + 100);
+  yAxisSVG.setAttribute("x1", screenCenter.x);
+  yAxisSVG.setAttribute("y1", screenCenter.y);
+  yAxisSVG.setAttribute("x2", screenCenter.x);
+  yAxisSVG.setAttribute("y2", screenCenter.y + 100);
   yAxisSVG.setAttribute("stroke-width", "1px");
   yAxisSVG.setAttribute("stroke", "black");
   yAxisSVG.setAttribute("marker-end", "url(#arrow)");
@@ -29,16 +32,22 @@ window.addEventListener("load", function() {
 
   list = {
     x: 50,
-    y: 10,
+    y: 60,
+    angle: 0,
+    scale: 1,
     svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
     child: {
       x: 100,
       y: 120,
+      angle: 0,
+      scale: 1,
       svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
       child: {
         x: 60,
         y: 30,
         child: null,
+        angle: 0,
+        scale: 1,
         svg: document.createElementNS("http://www.w3.org/2000/svg", "line")
       }
     }
@@ -48,45 +57,65 @@ window.addEventListener("load", function() {
   svg.appendChild(list.child.svg);
   svg.appendChild(list.child.child.svg);
 
-  selected = list
+  selected = list;
 
-  function draw(node, originX, originY) {
+  function draw(node, originMatrix) {
     if (node == null) return;
 
     nodeSVG = node.svg;
-    nodeSVG.setAttribute("x1", originX);
-    nodeSVG.setAttribute("y1", originY);
-    nodeSVG.setAttribute("x2", originX + node.x);
-    nodeSVG.setAttribute("y2", originY + node.y);
+
+    nodeSVG.setAttribute("x1", 0);
+    nodeSVG.setAttribute("y1", 0);
+    nodeSVG.setAttribute("x2", node.x);
+    nodeSVG.setAttribute("y2", node.y);
+    nodeSVG.setAttribute("transform", TransformationMatrix.toCSS(originMatrix));
     nodeSVG.setAttribute("stroke-width", "1px");
     nodeSVG.setAttribute("stroke", node === selected ? "orange" : "grey");
     nodeSVG.setAttribute("marker-end", "url(#dot)");
 
-    draw(node.child, originX + node.x, originY + node.y);
+    newMatrix = TransformationMatrix.compose(
+      originMatrix,
+      TransformationMatrix.translate(node.x, node.y),
+      TransformationMatrix.scale(node.scale),
+      TransformationMatrix.rotateDEG(node.angle),
+    );
+    draw(node.child, newMatrix);
   }
 
-  draw(list, screenCenterX, screenCenterY);
+  draw(list, screenMatrix);
 
   window.addEventListener("keyup", function(event) {
     if (event.key === "n") {
-      if (selected) {
-        selected = selected.child
+      if (selected === null) {
+        selected = list;
       } else {
-        selected = list
+        selected = selected.child;
       }
-      draw(list, screenCenterX, screenCenterY)
+      draw(list, screenMatrix);
     } else if (event.key === "ArrowLeft") {
-      selected.x -= 5
-      draw(list, screenCenterX, screenCenterY)
+      selected.x -= 5;
+      draw(list, screenMatrix);
     } else if (event.key === "ArrowRight") {
-      selected.x += 5
-      draw(list, screenCenterX, screenCenterY)
+      selected.x += 5;
+      draw(list, screenMatrix);
     } else if (event.key === "ArrowUp") {
-      selected.y += 5
-      draw(list, screenCenterX, screenCenterY)
+      selected.y += 5;
+      draw(list, screenMatrix);
     } else if (event.key === "ArrowDown") {
-      selected.y -= 5
-      draw(list, screenCenterX, screenCenterY)
+      selected.y -= 5;
+      draw(list, screenMatrix);
+    } else if (event.key === "[") {
+      selected.angle += 5;
+      draw(list, screenMatrix);
+    } else if (event.key === "]") {
+      selected.angle -= 5;
+      draw(list, screenMatrix);
+    } else if (event.key === "=") {
+      selected.scale *= 1.1;
+      draw(list, screenMatrix);
+    } else if (event.key === "-") {
+      selected.scale *= 0.9;
+      draw(list, screenMatrix);
     }
-  })
+  });
 });
