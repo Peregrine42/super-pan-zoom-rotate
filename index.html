@@ -9,11 +9,44 @@
         align-items: center;
         height: 100%;
       }
+
+      #global {
+        background-color: rgb(240, 240, 240);
+        border: 1px solid black;
+      }
+
+      #camera {
+        border: 1px solid black;
+      }
     </style>
   </head>
   <body>
     <div id="container">
-      <svg id="test" width="500" height="500" transform="scale(1, -1)">
+      <svg id="global" width="250" height="250" transform="scale(1, -1)">
+        <marker
+          id="arrow"
+          viewBox="0 0 10 10"
+          refX="5"
+          refY="5"
+          markerWidth="10"
+          markerHeight="10"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" />
+        </marker>
+
+        <marker
+          id="dot"
+          viewBox="0 0 10 10"
+          refX="5"
+          refY="5"
+          markerWidth="10"
+          markerHeight="10"
+        >
+          <circle cx="5" cy="5" r="5" fill="red" />
+        </marker>
+      </svg>
+      <svg id="camera" width="250" height="250" transform="scale(1, -1)">
         <marker
           id="arrow"
           viewBox="0 0 10 10"
