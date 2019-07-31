@@ -150,20 +150,56 @@ window.addEventListener("load", function() {
   draw(camera, screenMatrix, "cameraSVG");
 
   window.addEventListener("keyup", function(event) {
+    cameraMatrix = TransformationMatrix.inverse(
+      TransformationMatrix.compose(
+        TransformationMatrix.translate(camera.x, camera.y),
+        TransformationMatrix.rotateDEG(
+          camera.angle,
+          camera.angleCenterX,
+          camera.angleCenterY
+        ),
+        TransformationMatrix.scale(camera.scale)
+      )
+    );
+
     if (event.key === "ArrowLeft") {
-      origin.x += 5;
+      offset = TransformationMatrix.applyToPoint(cameraMatrix, {
+        x: 5,
+        y: 0
+      });
+
+      origin.x += offset.x;
+      origin.y += offset.y;
       draw(point, screenMatrix, "svg");
       draw(camera, screenMatrix, "cameraSVG");
     } else if (event.key === "ArrowRight") {
-      origin.x -= 5;
+      offset = TransformationMatrix.applyToPoint(cameraMatrix, {
+        x: -5,
+        y: 0
+      });
+
+      origin.x += offset.x;
+      origin.y += offset.y;
       draw(point, screenMatrix, "svg");
       draw(camera, screenMatrix, "cameraSVG");
     } else if (event.key === "ArrowUp") {
-      origin.y -= 5;
+      offset = TransformationMatrix.applyToPoint(cameraMatrix, {
+        x: 0,
+        y: -5
+      });
+
+      origin.x += offset.x;
+      origin.y += offset.y;
       draw(point, screenMatrix, "svg");
       draw(camera, screenMatrix, "cameraSVG");
     } else if (event.key === "ArrowDown") {
-      origin.y += 5;
+      offset = TransformationMatrix.applyToPoint(cameraMatrix, {
+        x: 0,
+        y: 5
+      });
+
+      origin.x += offset.x;
+      origin.y += offset.y;
       draw(point, screenMatrix, "svg");
       draw(camera, screenMatrix, "cameraSVG");
     } else if (event.key === "[") {
