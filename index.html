@@ -3,11 +3,15 @@
     <script src="lib/transformation-matrix-2.0.5.js"></script>
     <script src="index.js"></script>
     <style>
-      #container {
+      .container {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100%;
+        width: 100%;
+      }
+
+      #client-container {
+        width: 100%;
       }
 
       #global {
@@ -18,10 +22,33 @@
       #camera {
         border: 1px solid black;
       }
+
+      #client-background {
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: darkgreen;
+        width: 300px;
+        height: 300px;
+      }
+
+      #client {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .box {
+        width: 100px;
+        height: 100px;
+        border-radius: 5px;
+        margin: 10px;
+      }
     </style>
   </head>
   <body>
-    <div id="container">
+    <div class="container">
       <svg id="global" width="250" height="250" transform="scale(1, -1)">
         <marker
           id="arrow"
@@ -70,6 +97,16 @@
           <circle cx="5" cy="5" r="5" fill="red" />
         </marker>
       </svg>
+    </div>
+
+    <div id="client-container" class="container">
+      <div id="client-background">
+        <div id="client">
+          <div class="box" style="background-color: red"></div>
+          <div class="box" style="background-color: green"></div>
+          <div class="box" style="background-color: blue"></div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

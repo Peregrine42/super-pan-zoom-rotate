@@ -4,11 +4,11 @@ window.addEventListener("load", function() {
 
   // Global setup
 
-  screenMatrix = TransformationMatrix.translate(
+  globalScreenMatrix = TransformationMatrix.translate(
     svg.getAttribute("width") / 2,
     svg.getAttribute("height") / 2
   );
-  screenCenter = TransformationMatrix.applyToPoint(screenMatrix, {
+  screenCenter = TransformationMatrix.applyToPoint(globalScreenMatrix, {
     x: 0,
     y: 0
   });
@@ -39,11 +39,11 @@ window.addEventListener("load", function() {
 
   // Camera setup
 
-  screenMatrix = TransformationMatrix.translate(
+  cameraScreenMatrix = TransformationMatrix.translate(
     cameraSVG.getAttribute("width") / 2,
     cameraSVG.getAttribute("height") / 2
   );
-  screenCenter = TransformationMatrix.applyToPoint(screenMatrix, {
+  screenCenter = TransformationMatrix.applyToPoint(cameraScreenMatrix, {
     x: 0,
     y: 0
   });
@@ -82,8 +82,8 @@ window.addEventListener("load", function() {
     svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
     cameraSVG: document.createElementNS("http://www.w3.org/2000/svg", "line"),
     child: {
-      x: 50, // origin coordinates
-      y: 60,
+      x: 0, // origin coordinates
+      y: 0,
       angle: 0,
       angleCenterX: 0,
       angleCenterY: 0,
@@ -91,8 +91,8 @@ window.addEventListener("load", function() {
       svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
       cameraSVG: document.createElementNS("http://www.w3.org/2000/svg", "line"),
       child: {
-        x: 30, // global coordinates
-        y: 15,
+        x: 0, // global coordinates
+        y: 0,
         child: null,
         angle: 0,
         angleCenterX: 0,
@@ -102,10 +102,16 @@ window.addEventListener("load", function() {
         cameraSVG: document.createElementNS(
           "http://www.w3.org/2000/svg",
           "line"
-        )
+        ),
+        clientDOM: document.getElementById("client")
       }
     }
   };
+
+  clientScreenMatrix = TransformationMatrix.translate(
+    document.getElementById("client").getAttribute("width") / 2,
+    document.getElementById("client").getAttribute("height") / 2
+  );
 
   camera = list;
   origin = camera.child;
@@ -118,20 +124,35 @@ window.addEventListener("load", function() {
   cameraSVG.appendChild(origin.cameraSVG);
   cameraSVG.appendChild(point.cameraSVG);
 
+  var elements = [
+    camera.svg,
+    origin.svg,
+    point.svg,
+    camera.cameraSVG,
+    origin.cameraSVG,
+    point.cameraSVG
+  ];
+  for (var i = 0; i < elements.length; i++) {
+    var element = elements[i];
+    element.setAttribute("stroke-width", "1px");
+    element.setAttribute("stroke", "black");
+    element.setAttribute("marker-start", "url(#dot)");
+    element.setAttribute("marker-end", "url(#dot)");
+  }
+
   function draw(node, originMatrix, attribute) {
     if (node == null) return;
 
     nodeSVG = node[attribute];
 
-    nodeSVG.setAttribute("x1", 0);
-    nodeSVG.setAttribute("y1", 0);
-    nodeSVG.setAttribute("x2", node.x);
-    nodeSVG.setAttribute("y2", node.y);
-    nodeSVG.setAttribute("transform", TransformationMatrix.toCSS(originMatrix));
-    nodeSVG.setAttribute("stroke-width", "1px");
-    nodeSVG.setAttribute("stroke", "black");
-    nodeSVG.setAttribute("marker-start", "url(#dot)");
-    nodeSVG.setAttribute("marker-end", "url(#dot)");
+    if (nodeSVG) {
+      nodeSVG.setAttribute("x1", 0);
+      nodeSVG.setAttribute("y1", 0);
+      nodeSVG.setAttribute("x2", node.x);
+      nodeSVG.setAttribute("y2", node.y);
+      nodeSVG.style.transform =
+        TransformationMatrix.toCSS(originMatrix);
+    }
 
     newMatrix = TransformationMatrix.compose(
       originMatrix,
@@ -146,8 +167,20 @@ window.addEventListener("load", function() {
     draw(node.child, newMatrix, attribute);
   }
 
-  draw(point, screenMatrix, "svg");
-  draw(camera, screenMatrix, "cameraSVG");
+  draw(point, globalScreenMatrix, "svg");
+  draw(camera, cameraScreenMatrix, "cameraSVG");
+  draw(camera, clientScreenMatrix, "clientDOM");
+
+  window.addEventListener(
+    "keydown",
+    function(e) {
+      // space and arrow keys
+      if ([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+      }
+    },
+    false
+  );
 
   window.addEventListener("keyup", function(event) {
     cameraMatrix = TransformationMatrix.inverse(
@@ -163,6 +196,9 @@ window.addEventListener("load", function() {
     );
 
     if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      event.stopPropagation();
+
       offset = TransformationMatrix.applyToPoint(cameraMatrix, {
         x: 5,
         y: 0
@@ -170,9 +206,13 @@ window.addEventListener("load", function() {
 
       origin.x += offset.x;
       origin.y += offset.y;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      event.stopPropagation();
+
       offset = TransformationMatrix.applyToPoint(cameraMatrix, {
         x: -5,
         y: 0
@@ -180,9 +220,13 @@ window.addEventListener("load", function() {
 
       origin.x += offset.x;
       origin.y += offset.y;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+
       offset = TransformationMatrix.applyToPoint(cameraMatrix, {
         x: 0,
         y: -5
@@ -190,9 +234,13 @@ window.addEventListener("load", function() {
 
       origin.x += offset.x;
       origin.y += offset.y;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     } else if (event.key === "ArrowDown") {
+      event.preventDefault();
+      event.stopPropagation();
+
       offset = TransformationMatrix.applyToPoint(cameraMatrix, {
         x: 0,
         y: 5
@@ -200,24 +248,37 @@ window.addEventListener("load", function() {
 
       origin.x += offset.x;
       origin.y += offset.y;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     } else if (event.key === "[") {
+      event.preventDefault();
+      event.stopPropagation();
       camera.angle -= 5;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     } else if (event.key === "]") {
+      event.preventDefault();
+      event.stopPropagation();
       camera.angle += 5;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     } else if (event.key === "=") {
+      event.preventDefault();
+      event.stopPropagation();
       camera.scale *= 1.1;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     } else if (event.key === "-") {
+      event.preventDefault();
+      event.stopPropagation();
       camera.scale *= 0.9;
-      draw(point, screenMatrix, "svg");
-      draw(camera, screenMatrix, "cameraSVG");
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
     }
   });
 });
