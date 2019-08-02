@@ -89,9 +89,11 @@ window.addEventListener("load", function() {
     x: 0, // camera coordinates (these stay at 0)
     y: 0,
     angle: 0,
-    angleCenterX: 0, // touch devices need to pivot
-    angleCenterY: 0, // around a non-central origin
+    angleCenterX: 50, // touch devices need to pivot
+    angleCenterY: 50, // around a non-central origin
     scale: 1,
+    scaleCenterX: 0,
+    scaleCenterY: 0,
     svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
     cameraSVG: document.createElementNS("http://www.w3.org/2000/svg", "line"),
     child: {
@@ -101,6 +103,8 @@ window.addEventListener("load", function() {
       angleCenterX: 0,
       angleCenterY: 0,
       scale: 1,
+      scaleCenterX: 0,
+      scaleCenterY: 0,
       svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
       cameraSVG: document.createElementNS("http://www.w3.org/2000/svg", "line"),
       child: {
@@ -111,6 +115,8 @@ window.addEventListener("load", function() {
         angleCenterX: 0,
         angleCenterY: 0,
         scale: 1,
+        scaleCenterX: 0,
+        scaleCenterY: 0,
         svg: document.createElementNS("http://www.w3.org/2000/svg", "line"),
         cameraSVG: document.createElementNS(
           "http://www.w3.org/2000/svg",
@@ -167,13 +173,13 @@ window.addEventListener("load", function() {
 
     newMatrix = TransformationMatrix.compose(
       originMatrix,
-      TransformationMatrix.translate(node.x, node.y),
-      TransformationMatrix.rotateDEG(
-        node.angle,
-        node.angleCenterX,
-        node.angleCenterY
-      ),
-      TransformationMatrix.scale(node.scale)
+      TransformationMatrix.translate(node.angleCenterX, node.angleCenterY),
+      TransformationMatrix.rotateDEG(node.angle),
+      TransformationMatrix.translate(-node.angleCenterX, -node.angleCenterY),
+      TransformationMatrix.translate(node.scaleCenterX, node.scaleCenterY),
+      TransformationMatrix.scale(node.scale),
+      TransformationMatrix.translate(-node.scaleCenterX, -node.scaleCenterY),
+      TransformationMatrix.translate(node.x, node.y)
     );
     draw(node.child, newMatrix, attribute);
   }
@@ -185,7 +191,7 @@ window.addEventListener("load", function() {
   window.addEventListener(
     "keydown",
     function(e) {
-      // space and arrow keys
+      // arrow keys
       if ([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
         e.preventDefault();
       }
@@ -196,13 +202,9 @@ window.addEventListener("load", function() {
   window.addEventListener("keyup", function(event) {
     cameraMatrix = TransformationMatrix.inverse(
       TransformationMatrix.compose(
-        TransformationMatrix.translate(camera.x, camera.y),
-        TransformationMatrix.rotateDEG(
-          camera.angle,
-          camera.angleCenterX,
-          camera.angleCenterY
-        ),
-        TransformationMatrix.scale(camera.scale)
+        TransformationMatrix.rotateDEG(camera.angle),
+        TransformationMatrix.scale(camera.scale),
+        TransformationMatrix.translate(camera.x, camera.y)
       )
     );
 
