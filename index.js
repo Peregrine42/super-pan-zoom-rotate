@@ -4,10 +4,9 @@ window.addEventListener("load", function() {
 
   // Global setup
 
-  globalScreenMatrix = TransformationMatrix.translate(
-    svg.getAttribute("width") / 2,
-    svg.getAttribute("height") / 2
-  );
+  var svgRect = svg.getBoundingClientRect();
+
+  globalScreenMatrix = TransformationMatrix.identity();
   screenCenter = TransformationMatrix.applyToPoint(globalScreenMatrix, {
     x: 0,
     y: 0
@@ -15,34 +14,40 @@ window.addEventListener("load", function() {
 
   xAxisSVG = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
-  xAxisSVG.setAttribute("x1", screenCenter.x);
-  xAxisSVG.setAttribute("y1", screenCenter.y);
-  xAxisSVG.setAttribute("x2", screenCenter.x + 100);
-  xAxisSVG.setAttribute("y2", screenCenter.y);
+  xAxisSVG.setAttribute("x1", 0);
+  xAxisSVG.setAttribute("y1", 0);
+  xAxisSVG.setAttribute("x2", 30);
+  xAxisSVG.setAttribute("y2", 0);
   xAxisSVG.setAttribute("stroke-width", "1px");
   xAxisSVG.setAttribute("stroke", "black");
   xAxisSVG.setAttribute("marker-end", "url(#arrow)");
+  xAxisSVG.setAttribute(
+    "transform",
+    TransformationMatrix.toCSS(globalScreenMatrix)
+  );
 
   svg.appendChild(xAxisSVG);
 
   yAxisSVG = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
-  yAxisSVG.setAttribute("x1", screenCenter.x);
-  yAxisSVG.setAttribute("y1", screenCenter.y);
-  yAxisSVG.setAttribute("x2", screenCenter.x);
-  yAxisSVG.setAttribute("y2", screenCenter.y + 100);
+  yAxisSVG.setAttribute("x1", 0);
+  yAxisSVG.setAttribute("y1", 0);
+  yAxisSVG.setAttribute("x2", 0);
+  yAxisSVG.setAttribute("y2", 30);
   yAxisSVG.setAttribute("stroke-width", "1px");
   yAxisSVG.setAttribute("stroke", "black");
   yAxisSVG.setAttribute("marker-end", "url(#arrow)");
+  yAxisSVG.setAttribute(
+    "transform",
+    TransformationMatrix.toCSS(globalScreenMatrix)
+  );
 
   svg.appendChild(yAxisSVG);
 
   // Camera setup
+  var svgRect = svg.getBoundingClientRect();
 
-  cameraScreenMatrix = TransformationMatrix.translate(
-    cameraSVG.getAttribute("width") / 2,
-    cameraSVG.getAttribute("height") / 2
-  );
+  cameraScreenMatrix = TransformationMatrix.identity();
   screenCenter = TransformationMatrix.applyToPoint(cameraScreenMatrix, {
     x: 0,
     y: 0
@@ -50,25 +55,33 @@ window.addEventListener("load", function() {
 
   xAxisSVG = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
-  xAxisSVG.setAttribute("x1", screenCenter.x);
-  xAxisSVG.setAttribute("y1", screenCenter.y);
-  xAxisSVG.setAttribute("x2", screenCenter.x + 100);
-  xAxisSVG.setAttribute("y2", screenCenter.y);
+  xAxisSVG.setAttribute("x1", 0);
+  xAxisSVG.setAttribute("y1", 0);
+  xAxisSVG.setAttribute("x2", 30);
+  xAxisSVG.setAttribute("y2", 0);
   xAxisSVG.setAttribute("stroke-width", "1px");
   xAxisSVG.setAttribute("stroke", "black");
   xAxisSVG.setAttribute("marker-end", "url(#arrow)");
+  xAxisSVG.setAttribute(
+    "transform",
+    TransformationMatrix.toCSS(cameraScreenMatrix)
+  );
 
   cameraSVG.appendChild(xAxisSVG);
 
   yAxisSVG = document.createElementNS("http://www.w3.org/2000/svg", "line");
 
-  yAxisSVG.setAttribute("x1", screenCenter.x);
-  yAxisSVG.setAttribute("y1", screenCenter.y);
-  yAxisSVG.setAttribute("x2", screenCenter.x);
-  yAxisSVG.setAttribute("y2", screenCenter.y + 100);
+  yAxisSVG.setAttribute("x1", 0);
+  yAxisSVG.setAttribute("y1", 0);
+  yAxisSVG.setAttribute("x2", 0);
+  yAxisSVG.setAttribute("y2", 30);
   yAxisSVG.setAttribute("stroke-width", "1px");
   yAxisSVG.setAttribute("stroke", "black");
   yAxisSVG.setAttribute("marker-end", "url(#arrow)");
+  yAxisSVG.setAttribute(
+    "transform",
+    TransformationMatrix.toCSS(cameraScreenMatrix)
+  );
 
   cameraSVG.appendChild(yAxisSVG);
 
@@ -108,10 +121,9 @@ window.addEventListener("load", function() {
     }
   };
 
-  clientScreenMatrix = TransformationMatrix.translate(
-    document.getElementById("client").getAttribute("width") / 2,
-    document.getElementById("client").getAttribute("height") / 2
-  );
+  var clientRect = document.getElementById("client").getBoundingClientRect();
+
+  clientScreenMatrix = TransformationMatrix.identity();
 
   camera = list;
   origin = camera.child;
@@ -150,8 +162,7 @@ window.addEventListener("load", function() {
       nodeSVG.setAttribute("y1", 0);
       nodeSVG.setAttribute("x2", node.x);
       nodeSVG.setAttribute("y2", node.y);
-      nodeSVG.style.transform =
-        TransformationMatrix.toCSS(originMatrix);
+      nodeSVG.style.transform = TransformationMatrix.toCSS(originMatrix);
     }
 
     newMatrix = TransformationMatrix.compose(
@@ -229,7 +240,7 @@ window.addEventListener("load", function() {
 
       offset = TransformationMatrix.applyToPoint(cameraMatrix, {
         x: 0,
-        y: -5
+        y: 5
       });
 
       origin.x += offset.x;
@@ -243,7 +254,7 @@ window.addEventListener("load", function() {
 
       offset = TransformationMatrix.applyToPoint(cameraMatrix, {
         x: 0,
-        y: 5
+        y: -5
       });
 
       origin.x += offset.x;
