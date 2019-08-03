@@ -277,6 +277,8 @@ var startedX = null;
 var startedY = null;
 var startedCameraX = null;
 var startedCameraY = null;
+var startedCameraScale = null;
+var startedDistance = null;
 var camera = null;
 var origin = null;
 var point = null;
@@ -324,12 +326,33 @@ function handleStart(evt) {
     ongoingTouches.push(copyTouch(touches[i]));
   }
 
-  if (ongoingTouches.length === 1) {
-    var evt = ongoingTouches[0]
-    startedX = evt.pageX;
-    startedY = evt.pageY;
-    startedCameraX = camera.x
-    startedCameraY = camera.y
+  if (ongoingTouches.length > 0) {
+    var evt = ongoingTouches[0];
+    if (startedX === null) {
+      startedX = evt.pageX;
+      startedY = evt.pageY;
+      startedCameraX = camera.x;
+      startedCameraY = camera.y;
+    }
+
+    var evt2 = ongoingTouches[1];
+    // evt2 = { pageX: 30, pageY: 30 }
+    if (evt2) {
+      x = evt2.pageX - evt.pageX;
+      y = evt2.pageY - evt.pageY;
+
+      startedDistance = Math.sqrt(x * x + y * y);
+      startedCameraScale = camera.scale;
+    }
+  } else if (startedX === null && ongoingTouches.length === 2) {
+    // var evt1 = ongoingTouches[0];
+    // var evt2 = ongoingTouches[1];
+    //
+    // startedX = (evt2.pageX - evt1.pageX) / 2 + evt1.pageX;
+    // startedY = (evt2.pageY - evt1.pageY) / 2 + evt1.pageY;
+    //
+    // startedCameraX = camera.x;
+    // startedCameraY = camera.y;
   }
 }
 
@@ -342,20 +365,46 @@ function handleMove(evt) {
     var idx = ongoingTouchIndexById(touches[i].identifier);
 
     if (idx >= 0) {
-      ongoingTouches.splice(idx, 1, copyTouch(touches[i]));  // swap in the new touch record
+      ongoingTouches.splice(idx, 1, copyTouch(touches[i])); // swap in the new touch record
     } else {
       console.log("can't figure out which touch to continue");
     }
 
-    if (ongoingTouches.length === 1) {
-      var evt = ongoingTouches[0]
+    if (ongoingTouches.length > 0) {
+      var evt = ongoingTouches[0];
 
-      camera.x = startedCameraX - (startedX - evt.pageX)
-      camera.y = startedCameraY - (startedY - evt.pageY)
+      if (startedX !== null) {
+        camera.x = startedCameraX - (startedX - evt.pageX);
+        camera.y = startedCameraY - (startedY - evt.pageY);
+      }
+
+      var evt2 = ongoingTouches[1];
+      if (evt2) {
+        x = evt2.pageX - evt.pageX;
+        y = evt2.pageY - evt.pageY;
+
+        newCameraDistance = Math.sqrt(x * x + y * y);
+        newScale = newCameraDistance / startedDistance
+
+        camera.scale = startedCameraScale * newScale;
+      }
 
       draw(point, globalScreenMatrix, "svg");
       draw(camera, cameraScreenMatrix, "cameraSVG");
       draw(camera, clientScreenMatrix, "clientDOM");
+    } else if (startedX !== null && ongoingTouches.length === 2) {
+      // var evt1 = ongoingTouches[0];
+      // var evt2 = ongoingTouches[1];
+      //
+      // centerX = (evt2.pageX - evt1.pageX) / 2 + evt1.pageX;
+      // centerY = (evt2.pageY - evt1.pageY) / 2 + evt1.pageY;
+      //
+      // camera.x = startedCameraX - (startedX - centerX);
+      // camera.y = startedCameraY - (startedY - centerY);
+      //
+      // draw(point, globalScreenMatrix, "svg");
+      // draw(camera, cameraScreenMatrix, "cameraSVG");
+      // draw(camera, clientScreenMatrix, "clientDOM");
     }
   }
 }
@@ -369,10 +418,14 @@ function handleEnd(evt) {
     var idx = ongoingTouchIndexById(touches[i].identifier);
 
     if (idx >= 0) {
-      ongoingTouches.splice(idx, 1);  // remove it; we're done
+      ongoingTouches.splice(idx, 1); // remove it; we're done
     } else {
       console.log("can't figure out which touch to end");
     }
+  }
+
+  if (ongoingTouches.length === 0) {
+    startedX = null;
   }
 }
 
@@ -382,12 +435,20 @@ function handleCancel(evt) {
 
   for (var i = 0; i < touches.length; i++) {
     var idx = ongoingTouchIndexById(touches[i].identifier);
-    ongoingTouches.splice(idx, 1);  // remove it; we're done
+    ongoingTouches.splice(idx, 1); // remove it; we're done
+  }
+
+  if (ongoingTouches.length === 0) {
+    startedX = null;
   }
 }
 
 function copyTouch(touch) {
-  return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
+  return {
+    identifier: touch.identifier,
+    pageX: touch.pageX,
+    pageY: touch.pageY
+  };
 }
 
 function ongoingTouchIndexById(idToFind) {
@@ -398,5 +459,5 @@ function ongoingTouchIndexById(idToFind) {
       return i;
     }
   }
-  return -1;    // not found
+  return -1; // not found
 }
