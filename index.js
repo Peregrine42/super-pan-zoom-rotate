@@ -158,32 +158,6 @@ window.addEventListener("load", function() {
     element.setAttribute("marker-end", "url(#dot)");
   }
 
-  function draw(node, originMatrix, attribute) {
-    if (node == null) return;
-
-    nodeSVG = node[attribute];
-
-    if (nodeSVG) {
-      nodeSVG.setAttribute("x1", 0);
-      nodeSVG.setAttribute("y1", 0);
-      nodeSVG.setAttribute("x2", node.x);
-      nodeSVG.setAttribute("y2", node.y);
-      nodeSVG.style.transform = TransformationMatrix.toCSS(originMatrix);
-    }
-
-    newMatrix = TransformationMatrix.compose(
-      originMatrix,
-      TransformationMatrix.translate(node.angleCenterX, node.angleCenterY),
-      TransformationMatrix.rotateDEG(node.angle),
-      TransformationMatrix.translate(-node.angleCenterX, -node.angleCenterY),
-      TransformationMatrix.translate(node.scaleCenterX, node.scaleCenterY),
-      TransformationMatrix.scale(node.scale),
-      TransformationMatrix.translate(-node.scaleCenterX, -node.scaleCenterY),
-      TransformationMatrix.translate(node.x, node.y)
-    );
-    draw(node.child, newMatrix, attribute);
-  }
-
   draw(point, globalScreenMatrix, "svg");
   draw(camera, cameraScreenMatrix, "cameraSVG");
   draw(camera, clientScreenMatrix, "clientDOM");
@@ -294,4 +268,135 @@ window.addEventListener("load", function() {
       draw(camera, clientScreenMatrix, "clientDOM");
     }
   });
+
+  startup();
 });
+
+var ongoingTouches = [];
+var startedX = null;
+var startedY = null;
+var startedCameraX = null;
+var startedCameraY = null;
+var camera = null;
+var origin = null;
+var point = null;
+function startup() {
+  var el = document.getElementById("client");
+  el.addEventListener("touchstart", handleStart, false);
+  el.addEventListener("touchend", handleEnd, false);
+  el.addEventListener("touchcancel", handleCancel, false);
+  el.addEventListener("touchmove", handleMove, false);
+  console.log("initialized.");
+}
+
+function draw(node, originMatrix, attribute) {
+  if (node == null) return;
+
+  nodeSVG = node[attribute];
+
+  if (nodeSVG) {
+    nodeSVG.setAttribute("x1", 0);
+    nodeSVG.setAttribute("y1", 0);
+    nodeSVG.setAttribute("x2", node.x);
+    nodeSVG.setAttribute("y2", node.y);
+    nodeSVG.style.transform = TransformationMatrix.toCSS(originMatrix);
+  }
+
+  newMatrix = TransformationMatrix.compose(
+    originMatrix,
+    TransformationMatrix.translate(node.angleCenterX, node.angleCenterY),
+    TransformationMatrix.rotateDEG(node.angle),
+    TransformationMatrix.translate(-node.angleCenterX, -node.angleCenterY),
+    TransformationMatrix.translate(node.scaleCenterX, node.scaleCenterY),
+    TransformationMatrix.scale(node.scale),
+    TransformationMatrix.translate(-node.scaleCenterX, -node.scaleCenterY),
+    TransformationMatrix.translate(node.x, node.y)
+  );
+  draw(node.child, newMatrix, attribute);
+}
+
+function handleStart(evt) {
+  evt.preventDefault();
+  var el = document.getElementById("client-background");
+  var touches = evt.changedTouches;
+
+  for (var i = 0; i < touches.length; i++) {
+    ongoingTouches.push(copyTouch(touches[i]));
+  }
+
+  if (ongoingTouches.length === 1) {
+    var evt = ongoingTouches[0]
+    startedX = evt.pageX;
+    startedY = evt.pageY;
+    startedCameraX = camera.x
+    startedCameraY = camera.y
+  }
+}
+
+function handleMove(evt) {
+  evt.preventDefault();
+  var el = document.getElementById("client-background");
+  var touches = evt.changedTouches;
+
+  for (var i = 0; i < touches.length; i++) {
+    var idx = ongoingTouchIndexById(touches[i].identifier);
+
+    if (idx >= 0) {
+      ongoingTouches.splice(idx, 1, copyTouch(touches[i]));  // swap in the new touch record
+    } else {
+      console.log("can't figure out which touch to continue");
+    }
+
+    if (ongoingTouches.length === 1) {
+      var evt = ongoingTouches[0]
+
+      camera.x = startedCameraX - (startedX - evt.pageX)
+      camera.y = startedCameraY - (startedY - evt.pageY)
+
+      draw(point, globalScreenMatrix, "svg");
+      draw(camera, cameraScreenMatrix, "cameraSVG");
+      draw(camera, clientScreenMatrix, "clientDOM");
+    }
+  }
+}
+
+function handleEnd(evt) {
+  evt.preventDefault();
+  var el = document.getElementById("client-background");
+  var touches = evt.changedTouches;
+
+  for (var i = 0; i < touches.length; i++) {
+    var idx = ongoingTouchIndexById(touches[i].identifier);
+
+    if (idx >= 0) {
+      ongoingTouches.splice(idx, 1);  // remove it; we're done
+    } else {
+      console.log("can't figure out which touch to end");
+    }
+  }
+}
+
+function handleCancel(evt) {
+  evt.preventDefault();
+  var touches = evt.changedTouches;
+
+  for (var i = 0; i < touches.length; i++) {
+    var idx = ongoingTouchIndexById(touches[i].identifier);
+    ongoingTouches.splice(idx, 1);  // remove it; we're done
+  }
+}
+
+function copyTouch(touch) {
+  return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
+}
+
+function ongoingTouchIndexById(idToFind) {
+  for (var i = 0; i < ongoingTouches.length; i++) {
+    var id = ongoingTouches[i].identifier;
+
+    if (id == idToFind) {
+      return i;
+    }
+  }
+  return -1;    // not found
+}
