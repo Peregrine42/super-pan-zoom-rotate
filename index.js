@@ -355,6 +355,7 @@ function handleStart(evt) {
       x = evt.pageX - evt2.pageX;
       y = evt.pageY - evt2.pageY;
       distance = Math.sqrt(x * x + y * y)
+      angle = Math.atan2(evt.pageY - evt2.pageY, evt2.pageX - evt.pageX) * 180 / Math.PI;
 
       box = el.getBoundingClientRect()
 
@@ -435,6 +436,8 @@ function handleMove(evt) {
           newX = (((evt.pageX + evt2.pageX) / 2))
           newY = (((evt.pageY + evt2.pageY) / 2))
 
+          newAngle = Math.atan2(evt.pageY - evt2.pageY, evt2.pageX - evt.pageX) * 180 / Math.PI;
+
           // console.log(camera.scale)
 
           x = evt2.pageX - evt.pageX;
@@ -444,16 +447,21 @@ function handleMove(evt) {
           newScale = 1 + (newDistance / distance - 1)
 
           camera.scale *= newScale
-          console.log(newScale)
+          console.log(angle)
+          console.log(newAngle)
+          console.log(newAngle - angle)
+          camera.angle -= newAngle - angle
+          // console.log(newScale)
           if (camera.scale > 2) camera.scale = 2
           if (camera.scale < 0.5) camera.scale = 0.5
 
-          origin.x += ((newX - startX)/camera.scale) + (newX - centerX) - (newScale * (newX - centerX))
+          origin.x +=  + (newX - centerX) - (newScale * (newX - centerX))
           origin.y += ((newY - startY)/camera.scale) + (newY - centerY) - (newScale * (newY - centerY))
 
           distance = newDistance
           startX = newX
           startY = newY
+          angle = newAngle
         }
 
         // camera.x = startedCameraX - (startedX - evt.pageX);
