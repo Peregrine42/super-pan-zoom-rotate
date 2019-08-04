@@ -89,8 +89,8 @@ window.addEventListener("load", function() {
     x: 0, // camera coordinates (these stay at 0)
     y: 0,
     angle: 0,
-    angleCenterX: 50, // touch devices need to pivot
-    angleCenterY: 50, // around a non-central origin
+    angleCenterX: 0, // touch devices need to pivot
+    angleCenterY: 0, // around a non-central origin
     scale: 1,
     scaleCenterX: 0,
     scaleCenterY: 0,
@@ -283,7 +283,7 @@ var camera = null;
 var origin = null;
 var point = null;
 function startup() {
-  var el = document.getElementById("client");
+  var el = document.getElementById("client-background");
   el.addEventListener("touchstart", handleStart, false);
   el.addEventListener("touchend", handleEnd, false);
   el.addEventListener("touchcancel", handleCancel, false);
@@ -306,13 +306,14 @@ function draw(node, originMatrix, attribute) {
 
   newMatrix = TransformationMatrix.compose(
     originMatrix,
+    TransformationMatrix.translate(node.x, node.y),
+
     TransformationMatrix.translate(node.angleCenterX, node.angleCenterY),
     TransformationMatrix.rotateDEG(node.angle),
     TransformationMatrix.translate(-node.angleCenterX, -node.angleCenterY),
-    TransformationMatrix.translate(node.scaleCenterX, node.scaleCenterY),
-    TransformationMatrix.scale(node.scale),
     TransformationMatrix.translate(-node.scaleCenterX, -node.scaleCenterY),
-    TransformationMatrix.translate(node.x, node.y)
+    TransformationMatrix.scale(node.scale),
+    TransformationMatrix.translate(node.scaleCenterX, node.scaleCenterY),
   );
   draw(node.child, newMatrix, attribute);
 }
@@ -328,22 +329,39 @@ function handleStart(evt) {
 
   if (ongoingTouches.length > 0) {
     var evt = ongoingTouches[0];
-    if (startedX === null) {
-      startedX = evt.pageX;
-      startedY = evt.pageY;
-      startedCameraX = camera.x;
-      startedCameraY = camera.y;
-    }
-
+    // if (startedX === null) {
     var evt2 = ongoingTouches[1];
-    // evt2 = { pageX: 30, pageY: 30 }
+    // evt2 = { pageX: 100, pageY: 450 };
+    // evt2 = { pageX: 30, pageY: 230 };
     if (evt2) {
-      x = evt2.pageX - evt.pageX;
-      y = evt2.pageY - evt.pageY;
+      // box = el.getBoundingClientRect();
+      // x1 = evt.pageX - box.left;
+      // x2 = evt2.pageX - box.left;
+      // newX = (x1 + x2) / 2;
+      // newX = newX - box.width / 2;
+      // startedX = newX;
+      // startedCameraX = camera.x;
+      //
+      // x = evt.pageX - evt2.pageX;
+      // y = evt.pageY - evt2.pageY;
+      // startedDistance = Math.sqrt(x * x + y * y);
+      // startedCameraScale = camera.scale;
+      //
+      // console.log("started");
+      // // offsetBox = el.getBoundingClientRect();
+      // console.log(x, y);
+      // console.log(startedDistance);
 
-      startedDistance = Math.sqrt(x * x + y * y);
-      startedCameraScale = camera.scale;
+      x = evt.pageX - evt2.pageX;
+      y = evt.pageY - evt2.pageY;
+      distance = Math.sqrt(x * x + y * y)
+
+      box = el.getBoundingClientRect()
+
+      startX = (((evt.pageX + evt2.pageX) / 2))
+      startY = (((evt.pageY + evt2.pageY) / 2))
     }
+    // }
   } else if (startedX === null && ongoingTouches.length === 2) {
     // var evt1 = ongoingTouches[0];
     // var evt2 = ongoingTouches[1];
@@ -373,21 +391,74 @@ function handleMove(evt) {
     if (ongoingTouches.length > 0) {
       var evt = ongoingTouches[0];
 
-      if (startedX !== null) {
-        camera.x = startedCameraX - (startedX - evt.pageX);
-        camera.y = startedCameraY - (startedY - evt.pageY);
-      }
-
       var evt2 = ongoingTouches[1];
-      if (evt2) {
-        x = evt2.pageX - evt.pageX;
-        y = evt2.pageY - evt.pageY;
+      // evt2 = { pageX: 100, pageY: 450 };
+      // evt2 = { pageX: 30, pageY: 230 };
+      // if (startedX !== null) {
+        if (evt2) {
+          // x = evt2.pageX - evt.pageX;
+          // y = evt2.pageY - evt.pageY;
+          //
+          // newDistance = Math.sqrt(x * x + y * y);
+          // newScale = (newDistance - startedDistance) / newDistance;
+          // // console.log("newDistance", newDistance)
+          // // console.log("startedDistance", startedDistance)
+          // // console.log("newScale", newScale)
+          //
+          // camera.scale = startedCameraScale + newScale;
+          // if (camera.scale < 0.25) camera.scale = 0.25;
+          // if (camera.scale > 4) camera.scale = 4;
+          //
+          // // console.log("camera.scale", camera.scale);
+          //
+          // box = el.getBoundingClientRect();
+          //
+          // x1 = evt.pageX - box.left;
+          // x2 = evt2.pageX - box.left;
+          // newX = (x1 + x2) / 2;
+          // newX = newX - box.width / 2;
+          // // x = x * camera.scale
+          //
+          // distanceX = newX * camera.scale - startedX;
+          //
+          // // console.log("---tick---")
+          // // console.log(newX)
+          // // console.log(startedX)
+          // camera.scaleCenterX = newX;
+          box = el.getBoundingClientRect()
 
-        newCameraDistance = Math.sqrt(x * x + y * y);
-        newScale = newCameraDistance / startedDistance
 
-        camera.scale = startedCameraScale * newScale;
-      }
+          centerX = box.left + (box.width/2)
+          centerY = box.top + (box.height/2)
+
+
+          newX = (((evt.pageX + evt2.pageX) / 2))
+          newY = (((evt.pageY + evt2.pageY) / 2))
+
+          // console.log(camera.scale)
+
+          x = evt2.pageX - evt.pageX;
+          y = evt2.pageY - evt.pageY;
+          newDistance = Math.sqrt(x * x + y * y)
+
+          newScale = 1 + (newDistance / distance - 1)
+
+          camera.scale *= newScale
+          console.log(newScale)
+          if (camera.scale > 2) camera.scale = 2
+          if (camera.scale < 0.5) camera.scale = 0.5
+
+          origin.x += ((newX - startX)/camera.scale) + (newX - centerX) - (newScale * (newX - centerX))
+          origin.y += ((newY - startY)/camera.scale) + (newY - centerY) - (newScale * (newY - centerY))
+
+          distance = newDistance
+          startX = newX
+          startY = newY
+        }
+
+        // camera.x = startedCameraX - (startedX - evt.pageX);
+        // camera.y = startedCameraY - (startedY - evt.pageY);
+      // }
 
       draw(point, globalScreenMatrix, "svg");
       draw(camera, cameraScreenMatrix, "cameraSVG");
