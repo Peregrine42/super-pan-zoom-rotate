@@ -455,7 +455,7 @@ function handleMove(evt) {
           if (camera.scale > 2) camera.scale = 2
           if (camera.scale < 0.5) camera.scale = 0.5
 
-          origin.x +=  + (newX - centerX) - (newScale * (newX - centerX))
+          origin.x += ((newX - startX)/camera.scale) + (newX - centerX) - (newScale * (newX - centerX))
           origin.y += ((newY - startY)/camera.scale) + (newY - centerY) - (newScale * (newY - centerY))
 
           distance = newDistance
